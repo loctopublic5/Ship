@@ -16,6 +16,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $nguon = Join-Path $PSScriptRoot '.claude'
 $dich = Join-Path (Resolve-Path $DuAn) '.claude'
+$mauSettings = Join-Path $PSScriptRoot 'mau/settings.json'
 
 $cacFile = @(
   'commands/ship.md',
@@ -41,12 +42,12 @@ foreach ($f in $cacFile) {
 
 $settingsDich = Join-Path $dich 'settings.json'
 if (Test-Path $settingsDich) {
-  Copy-Item (Join-Path $nguon 'settings.json') (Join-Path $dich 'settings.ship.json') -Force
+  Copy-Item $mauSettings (Join-Path $dich 'settings.ship.json') -Force
   Write-Host ''
   Write-Host 'Du an da co .claude/settings.json nen KHONG ghi de.'
   Write-Host 'Hay gop tay cac quyen trong .claude/settings.ship.json vao settings.json roi xoa file do.'
 } else {
-  Copy-Item (Join-Path $nguon 'settings.json') $settingsDich
+  Copy-Item $mauSettings $settingsDich
   Write-Host 'Da cai: settings.json'
 }
 

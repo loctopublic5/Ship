@@ -29,6 +29,22 @@ tự đưa ra quyết định lớn, thì dừng. Vẫn ghi `thay-doi.md` với 
 `## VƯỚNG MẮC` mô tả cụ thể chỗ vướng và những gì đã làm được. Có mục này,
 dây chuyền sẽ dừng chờ người dùng.
 
+## Chế độ SỬA (vòng sửa)
+
+Khi nhạc trưởng giao việc kèm số vòng và thư mục hồ sơ `.bangiao/vong-<n>/`:
+
+1. Đọc thứ cần sửa trong hồ sơ: `ket-qua-test.md` (mục TEST RỚT) nếu lý do là
+   test rớt, hoặc `danh-gia.md` (VẤN ĐỀ CHẶN, rồi VẤN ĐỀ NÊN SỬA) nếu lý do là
+   reviewer yêu cầu sửa. Đọc cả `thay-doi.md` cũ trong hồ sơ.
+2. Chỉ sửa đúng các lỗi được nêu, tìm nguyên nhân gốc chứ không vá triệu chứng.
+   Không mở rộng phạm vi.
+3. KHÔNG sửa file test của tester để test xanh. Nếu tin rằng chính test sai
+   (kiểm sai so với tiêu chí nghiệm thu), giữ nguyên code và ghi lập luận vào
+   mục `## PHẢN BIỆN TEST` để tester xem lại.
+4. Ghi `.bangiao/thay-doi.md` MỚI, đầy đủ theo khuôn bên dưới, tính luôn các
+   thay đổi của vòng trước (file này thay thế bàn giao cũ). Thêm mục
+   `## VÒNG SỬA <n>` liệt kê từng lỗi được nêu → đã sửa thế nào ở `file:dòng`.
+
 ## Khuôn file `.bangiao/thay-doi.md`
 
 ```markdown

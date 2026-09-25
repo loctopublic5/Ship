@@ -6,13 +6,16 @@
   Dung cho tu dong hoa: CI, Task Scheduler, hoac vong lap nhieu yeu cau.
   Chay tu thu muc goc cua du an (noi co .claude/).
 
+  Vong sua: test ROT hoac reviewer CAN SUA thi coder tu sua roi test/review lai,
+  toi da -SoVongSua vong (mac dinh 2, dat 0 de tat).
+
   Ma thoat:
     0  Reviewer CHAP THUAN
     10 Dang o nhanh chinh / khong phai repo git / HEAD roi
     11 Ke hoach con CAU HOI BO NGO
     12 Coder bao VUONG MAC
-    13 Test ROT
-    14 Reviewer CAN SUA
+    13 Test ROT (da het vong sua)
+    14 Reviewer CAN SUA (da het vong sua)
     15 Reviewer TU CHOI
     16 File ban giao thieu hoac sai khuon
     1  Loi khac (khong co claude, day chuyen dung giua chung...)
@@ -26,7 +29,8 @@
 param(
   [Parameter(Mandatory = $true, Position = 0)][string]$YeuCau,
   [string]$PermissionMode = 'acceptEdits',
-  [string[]]$ChoPhepThem = @()
+  [string[]]$ChoPhepThem = @(),
+  [ValidateRange(0, 10)][int]$SoVongSua = 2
 )
 
 # Khong dung 'Stop': o PS 5.1, chuyen huong stderr cua lenh native (2>&1) se nem loi dung script.
@@ -50,6 +54,7 @@ if (-not $nhanh -or @('main', 'master') -contains $nhanh) {
   exit 10
 }
 
+$env:SHIP_SO_VONG_SUA = "$SoVongSua"
 New-Item -ItemType Directory -Force '.bangiao' | Out-Null
 $trangThai = '.bangiao/trang-thai.json'
 Remove-Item $trangThai -ErrorAction SilentlyContinue
@@ -80,5 +85,5 @@ $maThoat = @{
 $ma = 1
 if ($tt.ketThuc -and $maThoat.ContainsKey($tt.ketThuc)) { $ma = $maThoat[$tt.ketThuc] }
 
-Write-Host "Chang cuoi: $($tt.chang) | Ket thuc: $($tt.ketThuc) | Ma thoat: $ma"
+Write-Host "Chang cuoi: $($tt.chang) | Vong sua: $($tt.vongSua)/$SoVongSua | Ket thuc: $($tt.ketThuc) | Ma thoat: $ma"
 exit $ma

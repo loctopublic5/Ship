@@ -4,8 +4,10 @@
 //
 //   node .claude/scripts/bangiao.cjs chuan-bi
 //   node .claude/scripts/bangiao.cjs kiem-tra <ke-hoach|thay-doi|ket-qua-test|danh-gia>
+//   node .claude/scripts/bangiao.cjs vong-sua
 //
 // Mã thoát: 0 tiếp tục · 1 file thiếu/sai khuôn · 2 bị chặn · 3 dây chuyền phải dừng
+//           4 cần vòng sửa (test rớt hoặc reviewer yêu cầu sửa)
 'use strict';
 
 const fs = require('fs');
@@ -22,7 +24,10 @@ const FILE_BAN_GIAO = {
   'danh-gia': 'danh-gia.md',
 };
 
-const MA = { TIEP_TUC: 0, LOI: 1, CHAN: 2, DUNG: 3 };
+// Đổi được qua biến môi trường SHIP_SO_VONG_SUA (0 = tắt vòng sửa).
+const SO_VONG_SUA_TOI_DA = Number.parseInt(process.env.SHIP_SO_VONG_SUA ?? '2', 10) || 0;
+
+const MA = { TIEP_TUC: 0, LOI: 1, CHAN: 2, DUNG: 3, SUA: 4 };
 
 function git(...args) {
   try {
@@ -131,6 +136,9 @@ function chuanBi() {
   for (const ten of [...Object.values(FILE_BAN_GIAO), 'trang-thai.json']) {
     fs.rmSync(path.join(THU_MUC, ten), { force: true });
   }
+  for (const ten of fs.readdirSync(THU_MUC)) {
+    if (/^vong-\d+$/.test(ten)) fs.rmSync(path.join(THU_MUC, ten), { recursive: true, force: true });
+  }
 
   // Giữ .bangiao/ ngoài git mà không đụng .gitignore của dự án.
   const fileExclude = git('rev-parse', '--git-path', 'info/exclude');
@@ -153,6 +161,8 @@ function chuanBi() {
     commitGoc: git('rev-parse', 'HEAD'),
     batDau: new Date().toISOString(),
     thayDoiCoSan,
+    vongSua: 0,
+    soVongSuaToiDa: SO_VONG_SUA_TOI_DA,
     ketThuc: null,
     lichSu: [],
   });
@@ -198,7 +208,7 @@ const LUAT = {
     if (kl === 'ROT') {
       const phanRot = timMuc(vb, 'TEST ROT');
       return {
-        ketQua: 'DUNG',
+        ketQua: 'SUA',
         ketThuc: 'test-rot',
         thongDiep: 'KẾT LUẬN: RỚT\n\n' + (rongNghia(phanRot) ? vb.trim() : phanRot),
       };
@@ -213,13 +223,44 @@ const LUAT = {
     }
     const hienThi = { 'CHAP THUAN': 'CHẤP THUẬN', 'CAN SUA': 'CẦN SỬA', 'TU CHOI': 'TỪ CHỐI' }[pq];
     console.log('PHAN_QUYET=' + pq.replace(' ', '_'));
-    return {
-      ketQua: 'TIEP_TUC',
-      ketThuc: pq.toLowerCase().replace(' ', '-'),
-      thongDiep: 'PHÁN QUYẾT: ' + hienThi,
-    };
+    const thongDiep = 'PHÁN QUYẾT: ' + hienThi;
+    if (pq === 'CHAP THUAN') return { ketQua: 'TIEP_TUC', ketThuc: 'chap-thuan', thongDiep };
+    if (pq === 'TU CHOI') return { ketQua: 'DUNG', ketThuc: 'tu-choi', thongDiep };
+    const chan = timMuc(vb, 'VAN DE CHAN');
+    return { ketQua: 'SUA', ketThuc: 'can-sua', thongDiep: thongDiep + (rongNghia(chan) ? '' : '\n\n' + chan) };
   },
 };
+
+// Chuyển bàn giao của vòng vừa rồi vào .bangiao/vong-N/, để chặng sau buộc phải ghi file mới.
+function vongSua() {
+  const tt = docTrangThai();
+  const lyDo = tt.ketThuc;
+  if (!['test-rot', 'can-sua'].includes(lyDo)) {
+    ketThuc('LOI', `Không có gì để sửa: trạng thái hiện tại là "${lyDo}", chỉ sửa sau test rớt hoặc CẦN SỬA.`);
+  }
+  const daDung = tt.vongSua || 0;
+  const moTa = lyDo === 'test-rot' ? 'test vẫn rớt' : 'reviewer vẫn yêu cầu sửa';
+  if (daDung >= SO_VONG_SUA_TOI_DA) {
+    ghiTrangThai('vong-sua', 'DUNG', { ketThuc: lyDo, hetVongSua: true });
+    const lyDoDung = SO_VONG_SUA_TOI_DA
+      ? `Đã dùng hết ${SO_VONG_SUA_TOI_DA} vòng sửa mà ${moTa}.`
+      : `Vòng sửa đang tắt (SHIP_SO_VONG_SUA=0) và ${moTa}.`;
+    ketThuc('DUNG', lyDoDung + ' Dừng, chờ người dùng.');
+  }
+
+  const n = daDung + 1;
+  const hoSo = path.join(THU_MUC, 'vong-' + n);
+  fs.mkdirSync(hoSo, { recursive: true });
+  for (const ten of ['thay-doi.md', 'ket-qua-test.md', 'danh-gia.md']) {
+    const nguon = path.join(THU_MUC, ten);
+    if (fs.existsSync(nguon)) fs.renameSync(nguon, path.join(hoSo, ten));
+  }
+  ghiTrangThai('vong-sua', 'TIEP_TUC', { vongSua: n, lyDoSua: lyDo, ketThuc: null });
+  console.log(`VONG=${n}/${SO_VONG_SUA_TOI_DA}`);
+  console.log('LY_DO=' + lyDo);
+  console.log(`HO_SO=.bangiao/vong-${n}/`);
+  ketThuc('TIEP_TUC', `Bắt đầu vòng sửa ${n}/${SO_VONG_SUA_TOI_DA} vì ${lyDo === 'test-rot' ? 'test rớt' : 'reviewer yêu cầu sửa'}.`);
+}
 
 function kiemTra(chang) {
   if (!LUAT[chang]) {
@@ -238,4 +279,5 @@ function kiemTra(chang) {
 const [lenh, doiSo] = process.argv.slice(2);
 if (lenh === 'chuan-bi') chuanBi();
 else if (lenh === 'kiem-tra') kiemTra(doiSo);
-else ketThuc('LOI', 'Cách dùng: bangiao.cjs chuan-bi | kiem-tra <ke-hoach|thay-doi|ket-qua-test|danh-gia>');
+else if (lenh === 'vong-sua') vongSua();
+else ketThuc('LOI', 'Cách dùng: bangiao.cjs chuan-bi | kiem-tra <ke-hoach|thay-doi|ket-qua-test|danh-gia> | vong-sua');

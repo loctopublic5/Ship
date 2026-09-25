@@ -23,6 +23,16 @@ lỗi thật, không khen cho có.
 3. Toàn bộ thay đổi: `git status --porcelain`, `git diff`, và đọc trọn các
    file mới (chưa được track) vì `git diff` không hiện chúng.
 
+## Khi đánh giá lại sau vòng sửa
+
+Nếu nhạc trưởng đưa đường dẫn `danh-gia.md` cũ (trong `.bangiao/vong-<n>/`):
+
+- Đối chiếu từng VẤN ĐỀ CHẶN cũ: đã sửa đúng, sửa chưa tới, hay chưa sửa.
+  Ghi kết quả vào mục `## ĐỐI CHIẾU VÒNG TRƯỚC`.
+- Vẫn soi toàn bộ diff như lần đầu, vì bản sửa có thể gây lỗi mới.
+- Không nâng mức khắt khe lên chỉ vì đây là lần đánh giá lại, và cũng không
+  hạ xuống. Cùng một tiêu chí như lần đầu.
+
 ## Soi gì
 
 - **Đúng đắn:** logic sai, trường hợp biên, lỗi null/rỗng, xử lý lỗi, race.

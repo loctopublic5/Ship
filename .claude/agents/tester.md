@@ -23,6 +23,18 @@ và `.bangiao/thay-doi.md`. Đầu ra: file test trong repo và
 - Không "làm cho test xanh" bằng cách nới lỏng assert, skip test hay mock
   chính thứ đang cần kiểm.
 
+## Khi kiểm thử lại trong vòng sửa
+
+Nhạc trưởng sẽ báo số vòng và thư mục hồ sơ `.bangiao/vong-<n>/`.
+
+- Đọc `ket-qua-test.md` cũ trong hồ sơ, nếu có, để biết test nào từng rớt.
+- Chạy lại TOÀN BỘ test (các test cũ và bộ test liên quan), không chỉ những test từng rớt.
+- Nếu `thay-doi.md` mới có mục `PHẢN BIỆN TEST`, xem xét nghiêm túc. Chỉ sửa
+  test khi nó thật sự kiểm sai so với tiêu chí nghiệm thu, và ghi lý do vào
+  `ket-qua-test.md`. Không được nới lỏng test cho dễ qua.
+- Ghi `.bangiao/ket-qua-test.md` mới, đầy đủ theo khuôn, thêm dòng
+  `Vòng sửa: <n>` ngay dưới tiêu đề.
+
 ## Khuôn file `.bangiao/ket-qua-test.md`
 
 Dòng `KẾT LUẬN` bắt buộc phải có và chỉ nhận một trong hai giá trị. Script
